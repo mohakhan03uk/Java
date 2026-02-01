@@ -240,3 +240,190 @@ import java.util.regex.*;
 import java.util.stream.*;
 import java.nio.file.*; // if using Files.lines
 ```
+
+
+
+
+
+# Java Streams: Finding & Matching — Optional<T> Examples
+
+> Java 17+ assumed. Import helpers:
+>
+> ```java
+> import java.util.*;
+> import java.util.stream.*;
+> import java.util.regex.*;
+> ```
+>
+> Each example **returns `Optional<T>`** and includes a short description of what the code does and why.
+
+---
+
+## 1) `findFirst()` — first element that satisfies a condition
+**What this does:** Filters the stream for names longer than 3 characters and returns the **first** one wrapped in `Optional<String>`.
+```java
+List<String> names = List.of("Al", "Alice", "Bob", "Charlie");
+Optional<String> first = names.stream()
+    .filter(s -> s.length() > 3)
+    .findFirst(); // Optional["Alice"]
+```
+**Why:** `findFirst()` preserves encounter order on ordered streams and returns `Optional.empty()` if none match.
+
+---
+
+## 2) `findAny()` — any matching element (parallel-friendly)
+**What this does:** In parallel, returns **any** element > 15 (non-deterministic which one) as `Optional<Integer>`.
+```java
+List<Integer> nums = List.of(10, 20, 30, 40);
+Optional<Integer> any = nums.parallelStream()
+    .filter(n -> n > 15)
+    .findAny(); // Optional[20] or Optional[30] or Optional[40]
+```
+**Why:** `findAny()` allows more optimization in parallel pipelines and does not guarantee the first element.
+
+---
+
+## 3) `max` / `min` — terminal ops that return `Optional<T>`
+**What this does:** Finds the user with the **maximum score** and the one with the **minimum name (lexicographically)**.
+```java
+record User(String name, int score) {}
+
+List<User> users = List.of(new User("Ann", 75), new User("Ben", 92), new User("Cara", 88));
+Optional<User> top = users.stream()
+    .max(Comparator.comparingInt(User::score));        // Optional[User("Ben",92)]
+Optional<User> minByName = users.stream()
+    .min(Comparator.comparing(User::name));            // Optional[User("Ann",75)]
+```
+**Why:** `max`/`min` return `Optional` because the stream might be empty; handle with `orElse*`.
+
+---
+
+## 4) `reduce` without identity — Optional because stream may be empty
+**What this does:** Sums integers and picks the **longest** string, both using `reduce(BinaryOperator)` (no identity).
+```java
+Optional<Integer> sum = Stream.of(1, 2, 3, 4)
+    .reduce(Integer::sum); // Optional[10]
+
+Optional<String> longest = Stream.of("a", "bbb", "cc")
+    .reduce((a, b) -> a.length() >= b.length() ? a : b); // Optional["bbb"]
+```
+**Why:** No identity value → result is undefined for empty streams → `Optional<T>`.
+
+---
+
+## 5) Map → Find pattern — compute then find
+**What this does:** Maps words to their lengths, then finds the first whose length is exactly 5.
+```java
+List<String> words = List.of("x", "alpha", "beta");
+Optional<Integer> len = words.stream()
+    .map(String::length)
+    .filter(n -> n == 5)
+    .findFirst(); // Optional[5]
+```
+**Why:** Often you transform (`map`) before deciding which element to select.
+
+---
+
+## 6) Primitive streams → `Optional<T>` via boxing
+**What this does:** Gets the **maximum** from an `IntStream` but returns `Optional<Integer>` by boxing.
+```java
+Optional<Integer> maxEven = IntStream.of(2, 4, 6)
+    .boxed()                     // IntStream -> Stream<Integer>
+    .max(Integer::compareTo);    // Optional[6]
+```
+**Why:** Primitive ops like `IntStream.max()` return `OptionalInt`; boxing keeps a uniform `Optional<T>` type.
+
+---
+
+## 7) `Optional`-producing lookups + `flatMap(Optional::stream)`
+**What this does:** Tries a key lookup that may fail (`Optional`), flattens successes, and returns the **first** found value.
+```java
+Optional<String> lookup(String key) {
+    return "id".equals(key) ? Optional.of("FOUND") : Optional.empty();
+}
+
+List<String> keys = List.of("x", "y", "id", "z");
+Optional<String> firstFound = keys.stream()
+    .map(k -> lookup(k))          // Stream<Optional<String>>
+    .flatMap(Optional::stream)    // Stream<String>
+    .findFirst();                 // Optional["FOUND"]
+```
+**Why:** `Optional::stream` (Java 9+) is perfect to flatten a `Stream<Optional<T>>` into a `Stream<T>`.
+
+---
+
+## 8) Deduplicate + sort + `findFirst()` — smallest that matches
+**What this does:** Gets the **smallest even** number as `Optional<Integer>`.
+```java
+Optional<Integer> smallestEven = Stream.of(9, 4, 6, 2, 7, 4)
+    .filter(n -> n % 2 == 0)   // 4, 6, 2, 4
+    .distinct()                // 4, 6, 2
+    .sorted()                  // 2, 4, 6
+    .findFirst();              // Optional[2]
+```
+**Why:** Ordering + `findFirst` reliably picks the minimal element that satisfies your predicate.
+
+---
+
+## 9) Wrap a collected result into `Optional`
+**What this does:** Collects items > 100 into a list; if the list is empty, returns `Optional.empty()` instead.
+```java
+List<Integer> data = List.of();
+Optional<List<Integer>> maybeList = data.stream()
+    .filter(n -> n > 100)
+    .collect(Collectors.collectingAndThen(
+        Collectors.toList(),
+        lst -> lst.isEmpty() ? Optional.empty() : Optional.of(lst)
+    )); // Optional.empty
+```
+**Why:** Useful when you want to signal “no result” without returning an empty container.
+
+---
+
+## 10) Stay in `Optional` after `findFirst` (no premature unwrapping)
+**What this does:** Finds a 3‑letter word and **maps** it to uppercase without leaving the `Optional` world.
+```java
+Optional<String> upper = Stream.of("one", "two", "three")
+    .filter(s -> s.length() == 3)
+    .findFirst()               // Optional["one"]
+    .map(String::toUpperCase); // Optional["ONE"]
+```
+**Why:** Prefer `Optional.map/flatMap/orElse*` to keep null‑safety and readability.
+
+---
+
+## 11) Guard with `findFirst().or(() -> ...)` (Java 9+)
+**What this does:** Try primary source; if empty, try a fallback source — all with `Optional<T>`.
+```java
+Optional<String> primary = Stream.<String>of().findFirst(); // empty
+Optional<String> fallback = Stream.of("backup").findFirst();
+
+Optional<String> result = primary.or(() -> fallback); // Optional["backup"]
+```
+**Why:** `Optional.or` composes fallbacks elegantly without unwrapping.
+
+---
+
+## 12) Using `Optional.filter` to post‑validate a found value
+**What this does:** Finds any user, then keeps it only if active.
+```java
+record User(String name, boolean active) {}
+
+Optional<User> maybeActive = Stream.of(
+        new User("Ann", false),
+        new User("Ben", true)
+    )
+    .findFirst()          // Optional[User("Ann", false)]
+    .filter(User::active); // Optional.empty (Ann is not active)
+```
+**Why:** `Optional.filter` lets you chain an additional predicate after selection.
+
+---
+
+### Notes / Pitfalls
+- `findFirst`/`findAny`/`max`/`min`/no‑identity `reduce` return `Optional.empty()` on empty streams → handle with `orElse*`, `ifPresent`, `orElseThrow`.
+- `findAny` is **non‑deterministic** on parallel streams; prefer `findFirst` when order matters.
+- Avoid side effects in predicates — short‑circuiting & parallelism can make behavior surprising.
+
+
+
