@@ -233,7 +233,7 @@
 
 ---
 
-## Copy‑Paste Imports
+## Imports
 ```java
 import java.util.*;
 import java.util.regex.*;
