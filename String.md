@@ -130,7 +130,7 @@ Why:
 ---
 **Step-by-step**
 
-1. "java" \              
+1. "java"              
  String literal\
  Goes into String Pool
  ***This is the trap, literal will go to pool when JVM will come up, hence the 'java' is already there and intern() will return its reference***
