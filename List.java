@@ -1,8 +1,6 @@
-# Java List – Senior Interview Preparation (12+ Years)
+# Java List
 
-This document contains **all questions, answers, explanations, traps, and insights** discussed for the **Java `List` interface**. It is structured the way real senior-level interviews progress: from fundamentals to internals, performance, concurrency, and API design.
 
----
 
 ## 1. What is `List` in Java?
 
