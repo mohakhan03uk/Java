@@ -6,6 +6,35 @@ flowchart TD
     SortedMap --> NavigableMap["java.util.NavigableMap<K,V>"]
     Map --> ConcurrentMap["java.util.concurrent.ConcurrentMap<K,V>"]
 ```
+```mermaid
+classDiagram
+    Map <|-- SortedMap
+    SortedMap <|-- NavigableMap
+    Map <|-- ConcurrentMap
+
+    class Map {
+        +Key-Value mapping
+        +No duplicate keys
+        +Allows one null key (impl dependent)
+    }
+
+    class SortedMap {
+        +Keys sorted
+        +Natural or Comparator order
+    }
+
+    class NavigableMap {
+        +Navigation methods
+        +lower(), higher(), floor(), ceiling()
+    }
+
+    class ConcurrentMap {
+        +Thread-safe
+        +Atomic operations
+        +High concurrency
+    }
+
+```
 ---
 
 ## Level 1: Absolute Basics
