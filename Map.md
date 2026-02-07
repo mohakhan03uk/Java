@@ -1,5 +1,11 @@
 
 # Java Map
+```mermaid
+flowchart TD
+    Map["java.util.Map<K,V>"] -->|Extends| SortedMap["java.util.SortedMap<K,V>"]
+    SortedMap --> NavigableMap["java.util.NavigableMap<K,V>"]
+    Map --> ConcurrentMap["java.util.concurrent.ConcurrentMap<K,V>"]
+```
 ---
 
 ## Level 1: Absolute Basics
