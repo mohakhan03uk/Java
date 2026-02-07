@@ -213,7 +213,8 @@ a instanceof Serializable  // true
 ---
 
 ## 14. Method Descriptors (JVM Signatures)
-
+This syntax like ```(I[Ljava/lang/String;)V``` comes directly from the JVM specification.\
+It’s how the JVM represents method signatures at runtime (bytecode, reflection, JNI).
 Format:
 ```
 (parameter-descriptors)return-descriptor
@@ -228,8 +229,10 @@ Java equivalent:
 ```java
 void method(int x, String[] arr)
 ```
+Break it down piece by piece :\
+( … ) → method parameters    :   After ) → return type\
+"  [Ljava/lang/String;    :      array of java.lang.String  "          " [ → array  :    L...; → object reference  ] "
 
----
 
 ## 15. Descriptor Examples
 
