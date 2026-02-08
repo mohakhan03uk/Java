@@ -152,14 +152,13 @@ Frequent resizing, GC pressure, latency spikes.
 - new index  =    oldIndex OR (oldIndex + oldCapacity)
 - No need to recompute full hash — optimization in JDK 8+
 ### Why HashMap (JDK 8+) does NOT recompute full hash during resize
-- Key idea (one sentence) : Because capacity is always a power of 2, doubling the table lets HashMap decide a new bucket using one extra bit, not a new hash calculation.
--  The Math Behind It :
-  - index = (n - 1) & hash        ( n = capacity , hash = spread hash of key )
+-  B/C capacity is always a power of 2, doubling the table lets HashMap decide a new bucket using one extra bit, not a new hash calculation.
+-  The Math Behind It : ```index = (n - 1) & hash        ( n = capacity , hash = spread hash of key )```
   - When resizing:
     - oldCapacity = n
     - newCapacity = 2n
     - What Actually Changes? Only one bit of the index calculation changes — the bit corresponding to oldCapacity. So for every existing entry, only two outcomes are possible:
-      - newIndex = oldIndex OR   newIndex = oldIndex + oldCapacity
+      - ```newIndex = oldIndex OR   newIndex = oldIndex + oldCapacity```
       - Before resize
         ```bash
         capacity = 16  -> binary 10000
