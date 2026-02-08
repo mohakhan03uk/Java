@@ -204,10 +204,21 @@ Different keys mapping to the same bucket.
 Linked list, worst case O(n).
 
 ### 19. Java 8+
-Treeifies bucket into Red-Black Tree when threshold exceeded.
+Treeifies bucket into Red-Black Tree when threshold exceeded.  ( O(long n) ) 
 
-### 20. Tree conversion thresholds
-Treeify at 8, untreeify at 6.
+## 20. Tree Conversion Thresholds (HashMap Java 8+)
+
+- In Java 8 and later, `HashMap` optimizes collision handling by converting a bucket from a **LinkedList** to a **Red-Black Tree** when collisions become excessive. This process is called **treeification**.
+- When does LinkedList → Red-Black Tree happen?
+  - A bucket is converted from a LinkedList to a Red-Black Tree when ALL of the following are true:
+  - Number of nodes in a single bucket > 8
+  - Overall HashMap capacity >= 64
+  - Collision count keeps increasing in the same bucket
+- If capacity < 64, HashMap prefers resizing instead of treeification.
+- Reverse Conversion: Tree → LinkedList
+  - When entries are removed: (untreeification)
+    - If tree size drops ≤ 6
+    - Bucket is converted back to LinkedList
 
 ### 21. Why Red-Black Tree?
 Better insertion/deletion balance than AVL.
