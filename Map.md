@@ -40,15 +40,40 @@ A `Map` is a data structure that stores data as **key–value pairs**, where key
 ### 6. How does HashMap store data?
 Internally uses:
 - **Array of buckets**
-- Each bucket contains:
-  - Linked list (Java 7)
-  - Linked list or Red-Black Tree (Java 8+)
+- Each bucket contains:   Each bucket stores one or more key-value pairs (Node<K,V> entries).
+  - Linked list (Java 7) 
+  - Linked list  (default) or Red-Black Tree (Java 8+)   (when collision chain grows large)
+```
+// LinkedList bucket:
+table[]
++----+----+----+----+
+| 0  | 1  | 2  | 3  |
++----+----+----+----+
+             |
+             v
+         Node(hash,k,v)
+               |
+         Node(hash,k,v)
+               |
+         Node(hash,k,v)
+```
+```
+//Treeified bucket:
+        (k,v)
+       /     \
+   (k,v)     (k,v)
 
+```
 ### 7. What is a bucket?
 A bucket is an **array index** where entries with same hash index are stored.
+> ***Hashing & Bucket Indexing***\
+> The key’s hashCode() method is invoked.\
+> The hash is spread (JDK 8+) to reduce collisions: ```h = hashCode() ^ (hashCode() >>> 16)```\
+> The final bucket index is calculated using: ```index = (n - 1) & h```\
+> where `n` is the current bucket array capacity.
 
 ### 8. Role of hashCode() and equals()
-- `hashCode()` → decides bucket
+- `hashCode()` → participate to decides bucket
 - `equals()` → resolves collisions inside bucket
 
 ### 9. Internal steps of put(k, v)
@@ -94,7 +119,11 @@ A bucket is an **array index** where entries with same hash index are stored.
     ```
 > “HashMap uses hashCode and modulo to find bucket” ----> ***BIG NO***
 #### One-line mental model 🧠
-> hashCode() gives the number → hash spreading mixes the bits → index picks the bucket
+> hashCode() gives the number → hash spreading mixes the bits → index picks the bucket\
+> HashMap uses an array of buckets indexed by spread hash values, resolves collisions via linked lists or red-black trees, resizes based on load factor, and provides near constant-time performance for well-distributed keys.
+
+### Null Value in HashMap
+> At most one null key  :  Stored at bucket index 0  : Multiple null values allowed
 ---
 
 ## Level 3: Capacity, Load Factor, Resizing
@@ -116,6 +145,57 @@ O(n), expensive due to rehashing.
 
 ### 16. Improper sizing issues
 Frequent resizing, GC pressure, latency spikes.
+
+### On resize:
+- Capacity doubles
+- Entries are redistributed using:
+- new index  =    oldIndex OR (oldIndex + oldCapacity)
+- No need to recompute full hash — optimization in JDK 8+
+### Why HashMap (JDK 8+) does NOT recompute full hash during resize
+- Key idea (one sentence) : Because capacity is always a power of 2, doubling the table lets HashMap decide a new bucket using one extra bit, not a new hash calculation.
+-  The Math Behind It :
+  - index = (n - 1) & hash        ( n = capacity , hash = spread hash of key )
+  - When resizing:
+    - oldCapacity = n
+    - newCapacity = 2n
+    - What Actually Changes? Only one bit of the index calculation changes — the bit corresponding to oldCapacity. So for every existing entry, only two outcomes are possible:
+      - newIndex = oldIndex OR   newIndex = oldIndex + oldCapacity
+      - Before resize
+        ```bash
+        capacity = 16  -> binary 10000
+        mask     = 15  -> binary 01111
+        index = hash & 01111
+        ```
+      - after resize:
+        ```bash
+        capacity = 32  -> binary 100000
+        mask     = 31  -> binary 11111
+        index = hash & 11111
+        ```
+      - Key Observation :
+        - Only the 5th bit (value 16) is newly considered.
+        - So HashMap checks:
+          ```bash
+          (hash & oldCapacity) == 0 ?
+          ✅ 0 → stays in same bucket index
+          ❌ 1 → moves to index + oldCapacity
+          ```
+        - Inside HashMap:
+          ```java
+          if ((hash & oldCapacity) == 0) {
+              newIndex = oldIndex;
+          } else {
+              newIndex = oldIndex + oldCapacity;  
+          }
+          ```
+          >This is why resize is O(n) but cheap per entry.
+          ---
+         | Approach             | Cost                    |
+         | -------------------- | ----------------------- |
+         | Recompute hashCode() | Expensive, user-defined |
+         | Modulo (%)           | Slow                    |
+         | Bit mask (&)         | Very fast               |
+         | One-bit check        | Extremely fast          |
 
 ---
 
