@@ -215,8 +215,8 @@ Treeifies bucket into Red-Black Tree when threshold exceeded.  ( O(long n) )
   - Overall HashMap capacity >= 64
   - Collision count keeps increasing in the same bucket
 - If capacity < 64, HashMap prefers resizing instead of treeification.
-- Reverse Conversion: Tree → LinkedList
-  - When entries are removed: (untreeification)
+- Reverse Conversion: Tree → LinkedList  (**untreeification**)
+  - When entries are removed: 
     - If tree size drops ≤ 6
     - Bucket is converted back to LinkedList
 
