@@ -104,3 +104,5 @@ Lookup:
 hash → equals → Comparable → fallback
 
 Correctness depends **only on equals()**.
+
+## Even with fallback, HashMap tree-bin lookup remains O(log n) because the Red-Black Tree height bounds traversal, and fallback adds only constant extra work per level without revisiting nodes or scanning entire subtrees.
