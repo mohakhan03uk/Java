@@ -253,11 +253,32 @@ Different views of map content.
 Avoids extra lookup.
 
 ### 29. Fail-fast iterator
-Throws ConcurrentModificationException.
+- Throws ConcurrentModificationException.
+- At iterator creation: ```java expectedModCount = modCount;```
+- On every iterator operation:
+   ```java
+      if (modCount != expectedModCount) {
+         throw new ConcurrentModificationException();
+      }
+   ```
+ - 
 
 ### 30. modCount
-Detects structural modifications.
+- Detects structural modifications.
+- `modCount` is an internal integer counter (defined in AbstractMap / AbstractList) that tracks how many times a collection’s structure has changed.
+- Why is it needed? → To detect unsafe concurrent modifications during iteration.
+- A structural modification is any operation that: ```Adds   Removes   Resizes```  elements in the collection
+- Increment the modCount :  ```java put()   remove()   clear()  resize()// HashMap rehash```   --> modCount changes
+- Does NOT increment modCount : ```java get() containsKey()  replace(key, value) setValue() on Map.Entry
+- Updating an existing value does not change structure
 
+### Important Clarifications
+- Fail-fast ≠ Thread-safe
+- modCount is not synchronized
+- It is a best-effort detection, not a guarantee
+- Why ConcurrentHashMap doesn’t use it
+  - Uses weakly consistent iterators , Allows concurrent modification , No ConcurrentModificationException
+- > modCount is an internal modification counter used by iterators to detect structural changes and throw ConcurrentModificationException when unsafe iteration occurs.    
 ### 31. Modification during iteration
 Only via iterator.remove().
 
