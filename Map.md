@@ -184,7 +184,7 @@ Frequent resizing, GC pressure, latency spikes.
           else
               newIndex = oldIndex + oldCapacity;  
           ```
-          >This is why resize is O(n) but cheap per entry.
+          - This is why resize is O(n) but cheap per entry.
           ---
          | Approach             | Cost                    |
          | -------------------- | ----------------------- |
