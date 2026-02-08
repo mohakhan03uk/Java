@@ -155,8 +155,7 @@ Frequent resizing, GC pressure, latency spikes.
 -  B/C capacity is always a power of 2, doubling the table lets HashMap decide a new bucket using one extra bit, not a new hash calculation.
 -  The Math Behind It : ```index = (n - 1) & hash        ( n = capacity , hash = spread hash of key )```
   - When resizing:
-    - oldCapacity = n
-    - newCapacity = 2n
+    - oldCapacity = n    ,   - newCapacity = 2n
     - What Actually Changes? Only one bit of the index calculation changes — the bit corresponding to oldCapacity. So for every existing entry, only two outcomes are possible:
       - ```newIndex = oldIndex OR   newIndex = oldIndex + oldCapacity```
       - Before resize
@@ -172,8 +171,7 @@ Frequent resizing, GC pressure, latency spikes.
         index = hash & 11111
         ```
       - Key Observation :
-        - Only the 5th bit (value 16) is newly considered.
-        - So HashMap checks:
+        - Only the 5th bit (value 16) is newly considered. So HashMap checks:
           ```bash
           (hash & oldCapacity) == 0 ?
           ✅ 0 → stays in same bucket index
@@ -181,11 +179,10 @@ Frequent resizing, GC pressure, latency spikes.
           ```
         - Inside HashMap:
           ```java
-          if ((hash & oldCapacity) == 0) {
+          if ((hash & oldCapacity) == 0)
               newIndex = oldIndex;
-          } else {
+          else
               newIndex = oldIndex + oldCapacity;  
-          }
           ```
           >This is why resize is O(n) but cheap per entry.
           ---
